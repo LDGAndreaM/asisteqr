@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #eceafc;
+  --ink: #1a1830;
+  --brand-blue: #2f6bff;
+  --brand-yellow: #ffc22e;
+  --accent: #6d5efc;
+}
+
+@theme inline {
+  --font-sans: var(--font-nunito-sans);
+  --font-display: var(--font-nunito);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-thumb {
+  background: #d5d1f2;
+  border-radius: 9px;
+}
+
+@keyframes scanline {
+  0% {
+    top: 6%;
+  }
+  50% {
+    top: 88%;
+  }
+  100% {
+    top: 6%;
+  }
+}
+@keyframes pop {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+.animate-scanline {
+  animation: scanline 1.4s ease-in-out infinite;
+}
+.animate-pop {
+  animation: pop 0.3s ease;
+}
+.animate-spin-slow {
+  animation: spin 1s linear infinite;
+}
+.animate-floaty {
+  animation: floaty 4s ease-in-out infinite;
+}
+
+.brand-gradient {
+  background-image: linear-gradient(135deg, var(--brand-blue), var(--brand-yellow));
+}

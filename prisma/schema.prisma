@@ -1,0 +1,150 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  TEACHER
+  STUDENT
+}
+
+enum AttendanceStatus {
+  PRESENTE
+  FALTA
+}
+
+enum LocationStatus {
+  DENTRO
+  FUERA
+  NA
+}
+
+enum JustificationStatus {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+}
+
+model User {
+  id             String   @id @default(cuid())
+  role           Role
+  name           String
+  email          String   @unique
+  passwordHash   String
+  institutionId  String?  @unique // matrícula, solo alumnos
+  createdAt      DateTime @default(now())
+
+  subjectsTaught   Subject[]        @relation("TeacherSubjects")
+  enrollments      Enrollment[]
+  attendanceRecords AttendanceRecord[]
+  justifications   Justification[]  @relation("StudentJustifications")
+  reviewedJustifications Justification[] @relation("ReviewerJustifications")
+  claimedInvitations Invitation[]   @relation("ClaimedInvitations")
+}
+
+model Subject {
+  id          String   @id @default(cuid())
+  name        String
+  code        String
+  room        String
+  scheduleText String
+  icon        String   @default("📚")
+  tint        String   @default("#ede9ff")
+  // schedule: which weekdays (0=Mon..4=Fri) this subject meets, for report matrix
+  weekdays    Int[]    @default([])
+  // geofence for QR attendance validation
+  latitude    Float?
+  longitude   Float?
+  radiusM     Int      @default(120)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  teacherId   String
+  teacher     User     @relation("TeacherSubjects", fields: [teacherId], references: [id])
+
+  enrollments Enrollment[]
+  invitations Invitation[]
+  qrTokens    QrToken[]
+  attendanceRecords AttendanceRecord[]
+  justifications Justification[]
+
+  @@unique([teacherId, code])
+}
+
+model Enrollment {
+  id        String  @id @default(cuid())
+  subjectId String
+  studentId String
+  active    Boolean @default(true)
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  student   User    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([subjectId, studentId])
+}
+
+model Invitation {
+  id                 String    @id @default(cuid())
+  subjectId          String
+  subject            Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  email              String
+  createdAt          DateTime  @default(now())
+  claimedAt          DateTime?
+  claimedByStudentId String?
+  claimedBy          User?     @relation("ClaimedInvitations", fields: [claimedByStudentId], references: [id])
+
+  @@unique([subjectId, email])
+}
+
+model QrToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  issuedAt  DateTime @default(now())
+  expiresAt DateTime
+  usedBy    String[] @default([]) // studentIds who already scanned this token (session-level de-dup)
+
+  @@index([subjectId])
+}
+
+model AttendanceRecord {
+  id            String           @id @default(cuid())
+  subjectId     String
+  subject       Subject          @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  studentId     String
+  student       User             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  scannedAt     DateTime         @default(now())
+  classDate     DateTime         // day (midnight) this record counts towards
+  status        AttendanceStatus @default(PRESENTE)
+  locationStatus LocationStatus  @default(NA)
+  latitude      Float?
+  longitude     Float?
+  distanceM     Float?
+
+  @@unique([subjectId, studentId, classDate])
+  @@index([subjectId, classDate])
+}
+
+model Justification {
+  id           String   @id @default(cuid())
+  studentId    String
+  student      User     @relation("StudentJustifications", fields: [studentId], references: [id], onDelete: Cascade)
+  subjectId    String
+  subject      Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  absenceDate  DateTime // día que se justificará
+  reason       String
+  fileName     String
+  filePath     String
+  status       JustificationStatus @default(PENDIENTE)
+  createdAt    DateTime @default(now())
+  reviewedAt   DateTime?
+  reviewerId   String?
+  reviewer     User?    @relation("ReviewerJustifications", fields: [reviewerId], references: [id])
+}
