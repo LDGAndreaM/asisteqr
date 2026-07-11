@@ -5,6 +5,7 @@ import { useState } from "react";
 import QrModal from "@/components/teacher/QrModal";
 import SubjectFormModal from "@/components/teacher/SubjectFormModal";
 import RosterPanel from "@/components/teacher/RosterPanel";
+import DeleteSubjectModal from "@/components/teacher/DeleteSubjectModal";
 
 export type Subject = {
   id: string;
@@ -31,6 +32,7 @@ export default function MateriasView({ initialSubjects }: { initialSubjects: Sub
   const [rosterOpenId, setRosterOpenId] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [deleteSubject, setDeleteSubject] = useState<Subject | null>(null);
 
   const active = subjects.filter((s) => s.active);
   const archived = subjects.filter((s) => !s.active);
@@ -156,13 +158,22 @@ export default function MateriasView({ initialSubjects }: { initialSubjects: Sub
                   </button>
                 </>
               ) : (
-                <button
-                  onClick={() => toggleArchive(s)}
-                  disabled={busyId === s.id}
-                  className="flex-1 py-[11px] rounded-xl bg-[#17c0a4] text-white font-extrabold text-[13.5px] disabled:opacity-50"
-                >
-                  Reactivar materia
-                </button>
+                <>
+                  <button
+                    onClick={() => toggleArchive(s)}
+                    disabled={busyId === s.id}
+                    className="flex-1 py-[11px] rounded-xl bg-[#17c0a4] text-white font-extrabold text-[13.5px] disabled:opacity-50"
+                  >
+                    Reactivar materia
+                  </button>
+                  <button
+                    onClick={() => setDeleteSubject(s)}
+                    title="Eliminar permanentemente"
+                    className="px-3.5 py-[11px] rounded-xl bg-[#ffeef0] text-[#e0384a] font-extrabold text-[13.5px]"
+                  >
+                    🗑️
+                  </button>
+                </>
               )}
             </div>
 
@@ -193,6 +204,17 @@ export default function MateriasView({ initialSubjects }: { initialSubjects: Sub
           onSaved={(s) => {
             setSubjects((prev) => prev.map((x) => (x.id === s.id ? { ...x, ...s } : x)));
             setEditSubject(null);
+          }}
+        />
+      )}
+      {deleteSubject && (
+        <DeleteSubjectModal
+          subjectId={deleteSubject.id}
+          subjectName={deleteSubject.name}
+          onClose={() => setDeleteSubject(null)}
+          onDeleted={() => {
+            setSubjects((prev) => prev.filter((x) => x.id !== deleteSubject.id));
+            setDeleteSubject(null);
           }}
         />
       )}

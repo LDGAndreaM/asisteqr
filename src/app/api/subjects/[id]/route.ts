@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { updateSubjectSchema } from "@/lib/validators";
 import { errorResponse } from "@/lib/api";
+import { deleteJustificationFile } from "@/lib/uploads";
 
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
@@ -39,6 +40,40 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     });
 
     return NextResponse.json({ subject: updated });
+  } catch (err) {
+    return errorResponse(err);
+  }
+}
+
+/** Borra permanentemente una materia archivada, junto con su historial (asistencias,
+ * justificaciones, inscripciones e invitaciones). Solo se permite si ya está archivada,
+ * para evitar borrar por accidente una materia en uso. */
+export async function DELETE(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await ctx.params;
+    const user = await requireUser("TEACHER");
+
+    const subject = await prisma.subject.findUnique({ where: { id } });
+    if (!subject || subject.teacherId !== user.id) {
+      return NextResponse.json({ error: "Materia no encontrada" }, { status: 404 });
+    }
+    if (subject.active) {
+      return NextResponse.json(
+        { error: "Archiva la materia antes de eliminarla definitivamente" },
+        { status: 400 },
+      );
+    }
+
+    const justifications = await prisma.justification.findMany({
+      where: { subjectId: id },
+      select: { filePath: true },
+    });
+
+    await prisma.subject.delete({ where: { id } });
+
+    await Promise.all(justifications.map((j) => deleteJustificationFile(j.filePath)));
+
+    return NextResponse.json({ ok: true });
   } catch (err) {
     return errorResponse(err);
   }
