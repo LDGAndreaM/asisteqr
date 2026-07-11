@@ -37,7 +37,7 @@ model User {
   role           Role
   name           String
   email          String   @unique
-  passwordHash   String
+  passwordHash   String?  // null si la cuenta solo usa "Continuar con Google"
   institutionId  String?  @unique // matrícula, solo alumnos
   createdAt      DateTime @default(now())
 

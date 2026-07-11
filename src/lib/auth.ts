@@ -7,7 +7,7 @@ import type { Role } from "@/generated/prisma/client";
 const SESSION_COOKIE = "asisteqr_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 14; // 14 days
 
-function getSecretKey() {
+export function getSecretKey() {
   const secret = process.env.AUTH_SECRET;
   if (!secret) throw new Error("AUTH_SECRET no está configurado");
   return new TextEncoder().encode(secret);

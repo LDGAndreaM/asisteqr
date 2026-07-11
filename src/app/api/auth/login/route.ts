@@ -15,6 +15,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Usuario o contraseña incorrectos" }, { status: 401 });
     }
 
+    if (!user.passwordHash) {
+      return NextResponse.json(
+        { error: "Esta cuenta usa inicio de sesión con Google. Usa el botón “Continuar con Google”." },
+        { status: 401 },
+      );
+    }
+
     const validPassword = await bcrypt.compare(body.password, user.passwordHash);
     if (!validPassword) {
       return NextResponse.json({ error: "Usuario o contraseña incorrectos" }, { status: 401 });
