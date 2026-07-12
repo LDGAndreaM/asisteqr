@@ -15,6 +15,7 @@
     "@prisma/client": "^7.8.0",
     "bcryptjs": "^3.0.3",
     "exceljs": "^4.4.0",
+    "firebase": "^12.16.0",
     "jose": "^6.2.3",
     "jsqr": "^1.4.0",
     "next": "16.2.10",

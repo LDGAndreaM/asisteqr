@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { signInWithGoogle, firebaseConfigured } from "@/lib/firebase-client";
+import Logo from "@/components/Logo";
 
 type Role = "maestro" | "alumno";
 type Mode = "login" | "register";
@@ -27,19 +29,46 @@ export default function LoginPage() {
   const [institutionId, setInstitutionId] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
-  useEffect(() => {
-    // Diferido a un microtask: el error viene de un redirect de Google (window.location),
-    // no de props/estado de React, así que no hay nada que sincronizar sincrónicamente aquí.
-    queueMicrotask(() => {
-      const params = new URLSearchParams(window.location.search);
-      const oauthError = params.get("error");
-      if (oauthError) {
-        setError(oauthError);
-        window.history.replaceState({}, "", "/login");
+  async function onGoogleClick() {
+    setError("");
+    if (!firebaseConfigured()) {
+      setError("El inicio de sesión con Google no está configurado todavía");
+      return;
+    }
+    setGoogleLoading(true);
+    try {
+      const idToken = await signInWithGoogle();
+      const res = await fetch("/api/auth/google/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken, role }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "No se pudo iniciar sesión con Google");
+        return;
       }
-    });
-  }, []);
+      if (data.status === "needs_registration") {
+        router.push("/login/completar");
+        return;
+      }
+      router.push(data.role === "STUDENT" ? "/student" : "/teacher");
+      router.refresh();
+    } catch (err) {
+      const code = (err as { code?: string })?.code;
+      if (code === "auth/popup-closed-by-user") {
+        // el usuario cerró la ventana, no es un error real
+      } else if (code === "auth/unauthorized-domain") {
+        setError("Este dominio no está autorizado en Firebase todavía");
+      } else {
+        setError("No se pudo iniciar sesión con Google");
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -83,15 +112,7 @@ export default function LoginPage() {
       <div className="w-full max-w-[420px]">
         <div className="text-center mb-[22px] text-white">
           <div className="w-[70px] h-[70px] rounded-[22px] bg-white/15 backdrop-blur-md flex items-center justify-center mx-auto mb-3.5 shadow-[0_12px_30px_rgba(0,0,0,.18)] animate-floaty">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
-              <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#fff" strokeWidth="2" />
-              <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#fff" strokeWidth="2" />
-              <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#fff" strokeWidth="2" />
-              <rect x="15" y="15" width="2.5" height="2.5" fill="#fff" />
-              <rect x="19" y="15" width="2" height="2" fill="#fff" />
-              <rect x="15" y="19" width="2" height="2" fill="#fff" />
-              <rect x="19" y="19" width="2" height="2" fill="#fff" />
-            </svg>
+            <Logo size={38} />
           </div>
           <h1
             className="m-0 text-[30px] font-black tracking-[-.5px]"
@@ -135,12 +156,14 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <a
-            href={`/api/auth/google/start?role=${role}`}
-            className="w-full mb-4 flex items-center justify-center gap-2.5 py-[13px] rounded-[13px] border-[1.5px] border-[#e7e4f5] font-bold text-[14px] text-[#1a1830] bg-white"
+          <button
+            type="button"
+            onClick={onGoogleClick}
+            disabled={googleLoading}
+            className="w-full mb-4 flex items-center justify-center gap-2.5 py-[13px] rounded-[13px] border-[1.5px] border-[#e7e4f5] font-bold text-[14px] text-[#1a1830] bg-white disabled:opacity-60"
           >
-            <GoogleLogo /> Continuar con Google
-          </a>
+            <GoogleLogo /> {googleLoading ? "Conectando…" : "Continuar con Google"}
+          </button>
 
           <div className="flex items-center gap-3 mb-4">
             <div className="h-px flex-1 bg-[#e7e4f5]" />

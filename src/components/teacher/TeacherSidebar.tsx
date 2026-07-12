@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import Logo from "@/components/Logo";
 
 const NAV = [
   { href: "/teacher/materias", label: "Materias", icon: "📚" },
@@ -37,10 +38,8 @@ export default function TeacherSidebar({
   return (
     <aside className="w-[250px] flex-none bg-white border-r border-[#ecebf5] px-4 py-[22px] flex flex-col sticky top-0 h-screen">
       <div className="flex items-center gap-2.5 px-2 pb-5">
-        <div
-          className="w-10 h-10 rounded-xl brand-gradient flex items-center justify-center text-white font-black text-lg"
-        >
-          Q
+        <div className="w-10 h-10 rounded-xl brand-gradient flex items-center justify-center">
+          <Logo size={24} />
         </div>
         <div>
           <div className="font-black text-[17px] leading-none" style={{ fontFamily: "var(--font-nunito)" }}>
