@@ -2,9 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Link from "next/link";
 import QrModal from "@/components/teacher/QrModal";
 import SubjectFormModal from "@/components/teacher/SubjectFormModal";
-import RosterPanel from "@/components/teacher/RosterPanel";
 import DeleteSubjectModal from "@/components/teacher/DeleteSubjectModal";
 
 export type Subject = {
@@ -29,7 +29,6 @@ export default function MateriasView({ initialSubjects }: { initialSubjects: Sub
   const [qrSubject, setQrSubject] = useState<Subject | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editSubject, setEditSubject] = useState<Subject | null>(null);
-  const [rosterOpenId, setRosterOpenId] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [deleteSubject, setDeleteSubject] = useState<Subject | null>(null);
@@ -98,9 +97,13 @@ export default function MateriasView({ initialSubjects }: { initialSubjects: Sub
                   {s.icon}
                 </div>
                 <div>
-                  <div className="font-extrabold text-[16.5px] leading-tight" style={{ fontFamily: "var(--font-nunito)" }}>
+                  <Link
+                    href={`/teacher/materias/${s.id}`}
+                    className="font-extrabold text-[16.5px] leading-tight hover:underline"
+                    style={{ fontFamily: "var(--font-nunito)" }}
+                  >
                     {s.name} {!s.active && <span className="text-xs text-[#a5a1bd] font-bold">(archivada)</span>}
-                  </div>
+                  </Link>
                   <div className="text-xs text-[#a5a1bd] font-bold tracking-wide">{s.code}</div>
                 </div>
               </div>
@@ -117,12 +120,9 @@ export default function MateriasView({ initialSubjects }: { initialSubjects: Sub
               <div className="flex gap-2 items-center">📍 <span>{s.room}</span></div>
               <div className="flex gap-2 items-center">
                 👥{" "}
-                <button
-                  onClick={() => setRosterOpenId(rosterOpenId === s.id ? null : s.id)}
-                  className="text-[#6d5efc] font-bold underline"
-                >
+                <Link href={`/teacher/materias/${s.id}`} className="text-[#6d5efc] font-bold underline">
                   {s.students} alumnos inscritos
-                </button>
+                </Link>
               </div>
             </div>
             <div className="flex items-center gap-2.5 mb-4">
@@ -176,8 +176,6 @@ export default function MateriasView({ initialSubjects }: { initialSubjects: Sub
                 </>
               )}
             </div>
-
-            {rosterOpenId === s.id && <RosterPanel subjectId={s.id} />}
           </div>
         ))}
         {visible.length === 0 && (

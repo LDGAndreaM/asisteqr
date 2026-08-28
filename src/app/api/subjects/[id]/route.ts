@@ -36,6 +36,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
         ...(data.latitude !== undefined && { latitude: data.latitude }),
         ...(data.longitude !== undefined && { longitude: data.longitude }),
         ...(data.active !== undefined && { active: data.active }),
+        ...(data.icon !== undefined && { icon: data.icon }),
       },
     });
 

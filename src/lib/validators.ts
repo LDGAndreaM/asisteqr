@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+export const SUBJECT_ICONS = [
+  "📐", "💻", "🗄️", "🔬", "📊", "📖", "🧪", "🎨",
+  "🏫", "🌍", "⚽", "🎵", "🏥", "⚗️", "📷", "🧮",
+] as const;
+
 export const loginSchema = z.object({
   role: z.enum(["maestro", "alumno"]),
   email: z.string().trim().email("Correo inválido"),
@@ -28,6 +33,7 @@ export const createSubjectSchema = z.object({
   weekdays: z.array(z.number().int().min(0).max(4)).min(1),
   latitude: z.number(),
   longitude: z.number(),
+  icon: z.enum(SUBJECT_ICONS).optional(),
 });
 
 export const updateSubjectSchema = z.object({
@@ -39,6 +45,7 @@ export const updateSubjectSchema = z.object({
   latitude: z.number().optional(),
   longitude: z.number().optional(),
   active: z.boolean().optional(),
+  icon: z.enum(SUBJECT_ICONS).optional(),
 });
 
 export const inviteStudentSchema = z.object({

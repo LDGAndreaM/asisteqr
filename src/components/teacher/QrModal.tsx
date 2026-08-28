@@ -53,14 +53,17 @@ export default function QrModal({ subjectId, onClose }: { subjectId: string; onC
         <p className="mb-[18px] text-[#a5a1bd] text-[13px]">{data?.subject.room}</p>
 
         <div
-          className="relative w-[250px] mx-auto p-4 bg-white rounded-[18px]"
-          style={{ boxShadow: "0 0 0 3px #f0eefb" }}
+          className="relative mx-auto p-4 bg-white rounded-[18px]"
+          style={{ boxShadow: "0 0 0 3px #f0eefb", width: "min(300px,80vw)" }}
         >
           {data ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={data.qrDataUrl} alt="Código QR" width={218} height={218} className="block mx-auto" />
+            <img src={data.qrDataUrl} alt="Código QR" className="block w-full h-auto mx-auto" />
           ) : (
-            <div className="w-[218px] h-[218px] mx-auto flex items-center justify-center text-[#a5a1bd] text-sm">
+            <div
+              className="mx-auto flex items-center justify-center text-[#a5a1bd] text-sm"
+              style={{ aspectRatio: "1 / 1" }}
+            >
               {error || "Generando…"}
             </div>
           )}

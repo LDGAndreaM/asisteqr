@@ -12,9 +12,9 @@ export default async function TeacherLayout({ children }: { children: React.Reac
   });
 
   return (
-    <div className="flex min-h-screen" style={{ background: "#f4f3ff" }}>
+    <div className="flex flex-col md:flex-row min-h-screen" style={{ background: "#f4f3ff" }}>
       <TeacherSidebar teacherName={user.name} teacherEmail={user.email} pendingCount={pendingCount} />
-      <main className="flex-1 min-w-0 px-8 py-7 max-w-[1120px]">{children}</main>
+      <main className="flex-1 min-w-0 px-4 py-5 pb-24 md:px-8 md:py-7 md:pb-7 max-w-[1120px]">{children}</main>
     </div>
   );
 }

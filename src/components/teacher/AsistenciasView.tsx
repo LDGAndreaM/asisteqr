@@ -96,17 +96,17 @@ export default function AsistenciasView({
         ))}
       </div>
 
-      <div className="grid grid-cols-4 gap-3.5 mb-5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
         <StatCard label="Presentes" value={stats.present} color="#17c0a4" />
         <StatCard label="Faltas" value={stats.absent} color="#ff5c6c" />
         <StatCard label="Justificadas" value={stats.justified} color="#ffb020" />
         <StatCard label="Fuera del área" value={stats.outside} color="#ff5c9d" />
       </div>
 
-      <div className="bg-white rounded-[20px] border border-[#f0eefb] overflow-hidden">
+      <div className="bg-white rounded-[20px] border border-[#f0eefb] overflow-hidden overflow-x-auto">
         <div
           className="grid px-5 py-3.5 text-[12px] font-extrabold text-[#a5a1bd] uppercase tracking-wide"
-          style={{ background: "#faf9ff", gridTemplateColumns: "2.3fr 1fr 1fr 1.4fr" }}
+          style={{ background: "#faf9ff", gridTemplateColumns: "2.3fr 1fr 1fr 1.4fr", minWidth: 560 }}
         >
           <div>Alumno</div>
           <div>Estado</div>
@@ -121,11 +121,11 @@ export default function AsistenciasView({
             <div
               key={r.studentId}
               className="grid px-5 py-3.5 items-center text-[13.5px] border-t border-[#f4f2fc]"
-              style={{ gridTemplateColumns: "2.3fr 1fr 1fr 1.4fr" }}
+              style={{ gridTemplateColumns: "2.3fr 1fr 1fr 1.4fr", minWidth: 560 }}
             >
               <div className="flex items-center gap-2.5">
                 <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center font-extrabold text-[13px]"
+                  className="w-9 h-9 rounded-full flex items-center justify-center font-extrabold text-[13px] flex-none"
                   style={{ background: av[0], color: av[1] }}
                 >
                   {initialsOf(r.name)}

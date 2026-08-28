@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import type { Subject } from "@/components/teacher/MateriasView";
+import { SUBJECT_ICONS } from "@/lib/validators";
 
 const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie"];
 
@@ -14,6 +15,7 @@ type Initial = {
   weekdays: number[];
   latitude: number | null;
   longitude: number | null;
+  icon?: string;
 };
 
 export default function SubjectFormModal({
@@ -31,6 +33,7 @@ export default function SubjectFormModal({
   const [room, setRoom] = useState(initial?.room ?? "");
   const [scheduleText, setScheduleText] = useState(initial?.scheduleText ?? "");
   const [weekdays, setWeekdays] = useState<number[]>(initial?.weekdays ?? []);
+  const [icon, setIcon] = useState<string>(initial?.icon ?? SUBJECT_ICONS[0]);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
     initial?.latitude != null && initial?.longitude != null
       ? { lat: initial.latitude, lng: initial.longitude }
@@ -86,6 +89,7 @@ export default function SubjectFormModal({
         weekdays,
         latitude: coords.lat,
         longitude: coords.lng,
+        icon,
       };
       const res = await fetch(isEdit ? `/api/subjects/${initial!.id}` : "/api/subjects", {
         method: isEdit ? "PATCH" : "POST",
@@ -127,6 +131,25 @@ export default function SubjectFormModal({
           required
           className="w-full px-3.5 py-3 rounded-xl border-[1.5px] border-[#e7e4f5] text-sm mb-3.5 outline-none"
         />
+
+        <label className="block text-[12.5px] font-extrabold text-[#6b6880] mb-1.5">Ícono</label>
+        <div className="grid grid-cols-8 gap-1.5 mb-3.5">
+          {SUBJECT_ICONS.map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => setIcon(opt)}
+              className="aspect-square rounded-xl flex items-center justify-center text-[18px] border-[1.5px]"
+              style={
+                icon === opt
+                  ? { borderColor: "#6d5efc", background: "#f2f0fd" }
+                  : { borderColor: "#e7e4f5", background: "#fff" }
+              }
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
 
         <div className="flex gap-3">
           <div className="flex-1">

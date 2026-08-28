@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
         weekdays: data.weekdays,
         latitude: data.latitude,
         longitude: data.longitude,
-        icon: icons[n % icons.length],
+        icon: data.icon ?? icons[n % icons.length],
         tint: tints[n % tints.length],
       },
     });
