@@ -16,8 +16,6 @@ type Subject = {
   tint: string;
   active: boolean;
   weekdays: number[];
-  latitude: number | null;
-  longitude: number | null;
 };
 
 type StudentRow = {

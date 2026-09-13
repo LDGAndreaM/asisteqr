@@ -59,9 +59,8 @@ model Subject {
   tint        String   @default("#ede9ff")
   // schedule: which weekdays (0=Mon..4=Fri) this subject meets, for report matrix
   weekdays    Int[]    @default([])
-  // geofence for QR attendance validation
-  latitude    Float?
-  longitude   Float?
+  // radio de validación del geocerco; el centro se captura al generar el QR (ver QrToken),
+  // así se ajusta solo si la clase cambia de salón
   radiusM     Int      @default(120)
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -110,6 +109,9 @@ model QrToken {
   issuedAt  DateTime @default(now())
   expiresAt DateTime
   usedBy    String[] @default([]) // studentIds who already scanned this token (session-level de-dup)
+  // ubicación del maestro al generar el código; centro del geocerco para esta sesión de clase
+  latitude  Float?
+  longitude Float?
 
   @@index([subjectId])
 }

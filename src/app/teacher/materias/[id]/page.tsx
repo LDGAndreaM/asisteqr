@@ -67,8 +67,6 @@ export default async function SubjectDashboardPage({
         tint: subject.tint,
         active: subject.active,
         weekdays: subject.weekdays,
-        latitude: subject.latitude,
-        longitude: subject.longitude,
       }}
       students={students}
       pending={pendingInvites.map((i) => ({

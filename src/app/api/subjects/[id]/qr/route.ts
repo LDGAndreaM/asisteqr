@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import QRCode from "qrcode";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { generateQrSchema } from "@/lib/validators";
 import { errorResponse } from "@/lib/api";
 
 const QR_TTL_SECONDS = 15;
@@ -13,11 +14,15 @@ async function ownedSubject(subjectId: string, teacherId: string) {
   return subject;
 }
 
-/** Devuelve el token vigente para la materia, rotándolo si ya expiró. */
-export async function POST(_req: Request, ctx: { params: Promise<{ id: string }> }) {
+/** Devuelve el token vigente para la materia, rotándolo si ya expiró. Al crear uno nuevo,
+ * guarda la ubicación actual del maestro como centro del geocerco para esta sesión de clase
+ * (así se ajusta solo si la clase cambió de salón). */
+export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await ctx.params;
     const user = await requireUser("TEACHER");
+    const { latitude, longitude } = generateQrSchema.parse(await req.json());
+
     const subject = await ownedSubject(id, user.id);
     if (!subject) return NextResponse.json({ error: "Materia no encontrada" }, { status: 404 });
     if (!subject.active) {
@@ -38,6 +43,8 @@ export async function POST(_req: Request, ctx: { params: Promise<{ id: string }>
           subjectId: id,
           token: randomUUID(),
           expiresAt: new Date(now.getTime() + QR_TTL_SECONDS * 1000),
+          latitude,
+          longitude,
         },
       });
     }

@@ -23,8 +23,6 @@ export default async function MateriasPage() {
       icon: s.icon,
       tint: s.tint,
       weekdays: s.weekdays,
-      latitude: s.latitude,
-      longitude: s.longitude,
       active: s.active,
       students: s._count.enrollments,
       rate: await subjectAttendanceRate(s),

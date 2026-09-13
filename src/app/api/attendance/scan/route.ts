@@ -53,10 +53,10 @@ export async function POST(req: NextRequest) {
     }
 
     const distanceM =
-      subject.latitude != null && subject.longitude != null
-        ? distanceMeters(latitude, longitude, subject.latitude, subject.longitude)
+      qr.latitude != null && qr.longitude != null
+        ? distanceMeters(latitude, longitude, qr.latitude, qr.longitude)
         : 0;
-    const inside = subject.latitude == null || distanceM <= subject.radiusM;
+    const inside = qr.latitude == null || qr.longitude == null || distanceM <= subject.radiusM;
 
     const now = new Date();
     const record = await prisma.attendanceRecord.upsert({

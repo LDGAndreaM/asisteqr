@@ -31,8 +31,6 @@ export const createSubjectSchema = z.object({
   room: z.string().trim().min(1),
   scheduleText: z.string().trim().min(1),
   weekdays: z.array(z.number().int().min(0).max(4)).min(1),
-  latitude: z.number(),
-  longitude: z.number(),
   icon: z.enum(SUBJECT_ICONS).optional(),
 });
 
@@ -42,10 +40,13 @@ export const updateSubjectSchema = z.object({
   room: z.string().trim().min(1).optional(),
   scheduleText: z.string().trim().min(1).optional(),
   weekdays: z.array(z.number().int().min(0).max(4)).min(1).optional(),
-  latitude: z.number().optional(),
-  longitude: z.number().optional(),
   active: z.boolean().optional(),
   icon: z.enum(SUBJECT_ICONS).optional(),
+});
+
+export const generateQrSchema = z.object({
+  latitude: z.number(),
+  longitude: z.number(),
 });
 
 export const inviteStudentSchema = z.object({

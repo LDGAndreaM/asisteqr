@@ -13,8 +13,6 @@ type Initial = {
   room: string;
   scheduleText: string;
   weekdays: number[];
-  latitude: number | null;
-  longitude: number | null;
   icon?: string;
 };
 
@@ -34,38 +32,11 @@ export default function SubjectFormModal({
   const [scheduleText, setScheduleText] = useState(initial?.scheduleText ?? "");
   const [weekdays, setWeekdays] = useState<number[]>(initial?.weekdays ?? []);
   const [icon, setIcon] = useState<string>(initial?.icon ?? SUBJECT_ICONS[0]);
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
-    initial?.latitude != null && initial?.longitude != null
-      ? { lat: initial.latitude, lng: initial.longitude }
-      : null,
-  );
-  const [locating, setLocating] = useState(false);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   function toggleDay(i: number) {
     setWeekdays((prev) => (prev.includes(i) ? prev.filter((d) => d !== i) : [...prev, i].sort()));
-  }
-
-  function useMyLocation() {
-    setError("");
-    setLocating(true);
-    if (!("geolocation" in navigator)) {
-      setError("Este navegador no soporta geolocalización");
-      setLocating(false);
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setLocating(false);
-      },
-      () => {
-        setError("No se pudo obtener tu ubicación. Revisa los permisos del navegador.");
-        setLocating(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000 },
-    );
   }
 
   async function onSubmit(e: FormEvent) {
@@ -75,22 +46,9 @@ export default function SubjectFormModal({
       setError("Selecciona al menos un día de clase");
       return;
     }
-    if (!coords) {
-      setError("Captura la ubicación del salón antes de guardar la materia");
-      return;
-    }
     setSaving(true);
     try {
-      const body = {
-        name,
-        code,
-        room,
-        scheduleText,
-        weekdays,
-        latitude: coords.lat,
-        longitude: coords.lng,
-        icon,
-      };
+      const body = { name, code, room, scheduleText, weekdays, icon };
       const res = await fetch(isEdit ? `/api/subjects/${initial!.id}` : "/api/subjects", {
         method: isEdit ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -202,26 +160,10 @@ export default function SubjectFormModal({
           ))}
         </div>
 
-        <label className="block text-[12.5px] font-extrabold text-[#6b6880] mb-1.5">
-          Ubicación del salón (para validar asistencia)
-        </label>
-        <button
-          type="button"
-          onClick={useMyLocation}
-          disabled={locating}
-          className="w-full mb-5 px-3.5 py-3 rounded-xl border-[1.5px] text-sm font-bold flex items-center justify-center gap-2"
-          style={
-            coords
-              ? { borderColor: "#b3ecdd", background: "#f0fcf8", color: "#0d9b81" }
-              : { borderColor: "#e7e4f5", background: "#faf9ff", color: "#6b6880" }
-          }
-        >
-          {locating
-            ? "Ubicando…"
-            : coords
-            ? `📍 Ubicación capturada (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}) — toca para recapturar`
-            : "📍 Usar mi ubicación actual"}
-        </button>
+        <div className="mb-5 px-3.5 py-3 rounded-xl bg-[#f4f3ff] text-[12.5px] text-[#6b6880] leading-relaxed">
+          📍 La ubicación se captura automáticamente cada vez que generas el código QR, así que
+          si la clase cambia de salón no hay que editar nada aquí.
+        </div>
 
         {error && <p className="text-[#e0384a] text-[13px] font-bold text-center mb-3.5 -mt-2">{error}</p>}
 

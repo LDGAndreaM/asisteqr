@@ -79,8 +79,6 @@ export async function POST(req: NextRequest) {
         room: data.room,
         scheduleText: data.scheduleText,
         weekdays: data.weekdays,
-        latitude: data.latitude,
-        longitude: data.longitude,
         icon: data.icon ?? icons[n % icons.length],
         tint: tints[n % tints.length],
       },

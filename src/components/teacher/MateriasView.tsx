@@ -16,8 +16,6 @@ export type Subject = {
   icon: string;
   tint: string;
   weekdays: number[];
-  latitude: number | null;
-  longitude: number | null;
   active: boolean;
   students: number;
   rate: number;

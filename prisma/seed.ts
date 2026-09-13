@@ -6,10 +6,6 @@ import { PrismaPg } from "@prisma/adapter-pg";
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
-// Coordenadas de referencia para el "salón" de demostración (ajusta si lo pruebas en otro lugar).
-const CAMPUS_LAT = 19.4326;
-const CAMPUS_LNG = -99.1332;
-
 async function main() {
   const teacherPassword = await bcrypt.hash("maestro123", 10);
   const teacher = await prisma.user.upsert({
@@ -92,8 +88,6 @@ async function main() {
         weekdays: s.weekdays,
         icon: s.icon,
         tint: s.tint,
-        latitude: CAMPUS_LAT,
-        longitude: CAMPUS_LNG,
         radiusM: 120,
       },
     });

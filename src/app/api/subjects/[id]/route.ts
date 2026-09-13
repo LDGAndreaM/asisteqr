@@ -33,8 +33,6 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
         ...(data.room !== undefined && { room: data.room }),
         ...(data.scheduleText !== undefined && { scheduleText: data.scheduleText }),
         ...(data.weekdays !== undefined && { weekdays: data.weekdays }),
-        ...(data.latitude !== undefined && { latitude: data.latitude }),
-        ...(data.longitude !== undefined && { longitude: data.longitude }),
         ...(data.active !== undefined && { active: data.active }),
         ...(data.icon !== undefined && { icon: data.icon }),
       },
