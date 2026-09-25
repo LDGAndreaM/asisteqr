@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import NavIcon, { type NavIconName } from "@/components/NavIcon";
 
-const TABS = [
-  { href: "/student", icon: "🏠", label: "Inicio" },
-  { href: "/student/asistencia", icon: "📊", label: "Asistencia" },
+const TABS: { href: string; icon: NavIconName; label: string }[] = [
+  { href: "/student", icon: "home", label: "Inicio" },
+  { href: "/student/asistencia", icon: "chart", label: "Asistencia" },
 ];
 
 export default function StudentTabBar() {
@@ -31,7 +32,7 @@ export default function StudentTabBar() {
             className="flex-1 flex flex-col items-center gap-0.5 py-1"
             style={{ color: active ? "#6d5efc" : "#b7b3d0" }}
           >
-            <span className="text-xl">{t.icon}</span>
+            <NavIcon name={t.icon} size={24} />
             <span className="text-[10px] font-extrabold">{t.label}</span>
           </Link>
         );
@@ -42,7 +43,7 @@ export default function StudentTabBar() {
         className="w-[60px] h-[60px] rounded-full brand-gradient text-white flex items-center justify-center text-2xl -mt-7 border-4 border-white"
         style={{ boxShadow: "0 10px 22px rgba(109,94,252,.45)" }}
       >
-        📷
+        <NavIcon name="camera" size={26} />
       </Link>
 
       <Link
@@ -50,12 +51,12 @@ export default function StudentTabBar() {
         className="flex-1 flex flex-col items-center gap-0.5 py-1"
         style={{ color: pathname === "/student/justificar" ? "#6d5efc" : "#b7b3d0" }}
       >
-        <span className="text-xl">📄</span>
+        <NavIcon name="file" size={24} />
         <span className="text-[10px] font-extrabold">Justificar</span>
       </Link>
 
       <button onClick={logout} className="flex-1 flex flex-col items-center gap-0.5 py-1 text-[#b7b3d0]">
-        <span className="text-xl">↩️</span>
+        <NavIcon name="logout" size={24} />
         <span className="text-[10px] font-extrabold">Salir</span>
       </button>
     </div>

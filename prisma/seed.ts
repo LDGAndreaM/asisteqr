@@ -48,6 +48,7 @@ async function main() {
     {
       name: "Cálculo Diferencial",
       code: "CALC-201",
+      joinCode: "CALC21",
       room: "Aula B-204",
       scheduleText: "Lun · Mié · Vie · 08:00–09:30",
       weekdays: [0, 2, 4],
@@ -57,6 +58,7 @@ async function main() {
     {
       name: "Programación Web",
       code: "PROG-305",
+      joinCode: "PROG35",
       room: "Laboratorio 3",
       scheduleText: "Mar · Jue · 10:00–12:00",
       weekdays: [1, 3],
@@ -66,6 +68,7 @@ async function main() {
     {
       name: "Bases de Datos",
       code: "BD-310",
+      joinCode: "BDAT31",
       room: "Laboratorio 1",
       scheduleText: "Lun · Mié · 12:00–13:30",
       weekdays: [0, 2],
@@ -88,6 +91,7 @@ async function main() {
         weekdays: s.weekdays,
         icon: s.icon,
         tint: s.tint,
+        joinCode: s.joinCode,
         radiusM: 120,
       },
     });
@@ -108,6 +112,7 @@ async function main() {
   console.log(`  Maestro: m.rangel@inst.mx / maestro123`);
   console.log(`  Alumnos: ${studentsData.map((s) => s.email).join(", ")} / alumno123`);
   console.log(`  ID institución de Diego Soto: 2021030456`);
+  console.log(`  Códigos para unirse: ${subjects.map((s) => `${s.name} = ${s.joinCode}`).join(", ")}`);
 }
 
 main()

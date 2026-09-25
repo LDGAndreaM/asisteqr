@@ -50,8 +50,8 @@ export async function GET() {
           tint: subject.tint,
           room: subject.room,
           scheduleText: subject.scheduleText,
-          registered: rec?.status === "PRESENTE",
-          time: rec?.status === "PRESENTE" ? rec.scannedAt.toISOString().slice(11, 16) : null,
+          registered: !!rec && rec.status !== "FALTA",
+          time: rec && rec.status !== "FALTA" ? rec.scannedAt.toISOString().slice(11, 16) : null,
         };
       });
 

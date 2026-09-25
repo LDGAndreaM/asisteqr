@@ -17,6 +17,8 @@ export type Subject = {
   tint: string;
   weekdays: number[];
   active: boolean;
+  joinCode: string;
+  joinEnabled: boolean;
   students: number;
   rate: number;
 };
@@ -103,6 +105,14 @@ export default function MateriasView({ initialSubjects }: { initialSubjects: Sub
                     {s.name} {!s.active && <span className="text-xs text-[#a5a1bd] font-bold">(archivada)</span>}
                   </Link>
                   <div className="text-xs text-[#a5a1bd] font-bold tracking-wide">{s.code}</div>
+                  <div
+                    className="mt-1 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#f2f0fd] text-[11.5px] font-extrabold"
+                    title={s.joinEnabled ? "Código para que los alumnos se unan" : "Inscripción por código desactivada"}
+                    style={{ color: s.joinEnabled ? "#6d5efc" : "#a5a1bd" }}
+                  >
+                    🔑 <span className="tracking-[0.15em]">{s.joinCode}</span>
+                    {!s.joinEnabled && <span className="tracking-normal font-bold">(off)</span>}
+                  </div>
                 </div>
               </div>
               <button
@@ -142,10 +152,17 @@ export default function MateriasView({ initialSubjects }: { initialSubjects: Sub
                     📷 Generar QR
                   </button>
                   <button
-                    onClick={() => router.push(`/teacher/asistencias?subject=${s.id}`)}
+                    onClick={() => router.push(`/teacher/materias/${s.id}?tab=asistencia`)}
                     className="px-3.5 py-[11px] rounded-xl bg-[#f2f0fd] text-[#6d5efc] font-extrabold text-[13.5px]"
                   >
-                    Asistencia
+                    Lista
+                  </button>
+                  <button
+                    onClick={() => router.push(`/teacher/materias/${s.id}?tab=asignaciones`)}
+                    title="Asignaciones y calificaciones"
+                    className="px-3.5 py-[11px] rounded-xl bg-[#f2f0fd] text-[#6d5efc] font-extrabold text-[13.5px]"
+                  >
+                    📝
                   </button>
                   <button
                     onClick={() => toggleArchive(s)}

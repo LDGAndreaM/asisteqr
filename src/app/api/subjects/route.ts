@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { createSubjectSchema } from "@/lib/validators";
 import { errorResponse } from "@/lib/api";
 import { subjectAttendanceRate } from "@/lib/attendance";
+import { uniqueJoinCode } from "@/lib/join-code";
 
 export async function GET() {
   try {
@@ -26,6 +27,8 @@ export async function GET() {
           tint: s.tint,
           weekdays: s.weekdays,
           active: s.active,
+          joinCode: s.joinCode,
+          joinEnabled: s.joinEnabled,
           students: s._count.enrollments,
           rate: await subjectAttendanceRate(s),
         })),
@@ -81,6 +84,7 @@ export async function POST(req: NextRequest) {
         weekdays: data.weekdays,
         icon: data.icon ?? icons[n % icons.length],
         tint: tints[n % tints.length],
+        joinCode: await uniqueJoinCode(),
       },
     });
 

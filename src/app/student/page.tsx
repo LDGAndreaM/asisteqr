@@ -35,7 +35,7 @@ export default async function StudentInicio() {
     .filter(({ subject }) => subject.weekdays.includes(todayIdx))
     .map(({ subject }) => {
       const rec = recordBySubject.get(subject.id);
-      const registered = rec?.status === "PRESENTE";
+      const registered = !!rec && rec.status !== "FALTA";
       return {
         id: subject.id,
         name: subject.name,

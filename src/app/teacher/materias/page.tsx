@@ -24,6 +24,8 @@ export default async function MateriasPage() {
       tint: s.tint,
       weekdays: s.weekdays,
       active: s.active,
+      joinCode: s.joinCode,
+      joinEnabled: s.joinEnabled,
       students: s._count.enrollments,
       rate: await subjectAttendanceRate(s),
     })),

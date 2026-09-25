@@ -4,15 +4,21 @@ import { prisma } from "@/lib/prisma";
 import { studentSubjectStats } from "@/lib/attendance";
 import SubjectDashboard from "@/components/teacher/SubjectDashboard";
 
+const TABS = ["alumnos", "asistencia", "asignaciones"] as const;
+
 export default async function SubjectDashboardPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
   const user = await getCurrentUser();
   if (!user || user.role !== "TEACHER") redirect("/login");
 
   const { id } = await params;
+  const { tab } = await searchParams;
+  const initialTab = TABS.find((t) => t === tab) ?? "alumnos";
   const subject = await prisma.subject.findUnique({ where: { id } });
   if (!subject || subject.teacherId !== user.id) notFound();
 
@@ -67,7 +73,10 @@ export default async function SubjectDashboardPage({
         tint: subject.tint,
         active: subject.active,
         weekdays: subject.weekdays,
+        joinCode: subject.joinCode,
+        joinEnabled: subject.joinEnabled,
       }}
+      initialTab={initialTab}
       students={students}
       pending={pendingInvites.map((i) => ({
         id: i.id,

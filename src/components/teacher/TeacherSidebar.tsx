@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
+import NavIcon, { type NavIconName } from "@/components/NavIcon";
 
-const NAV = [
-  { href: "/teacher/materias", label: "Materias", icon: "📚" },
-  { href: "/teacher/asistencias", label: "Asistencias", icon: "✅" },
-  { href: "/teacher/justificaciones", label: "Justificaciones", icon: "📄" },
-  { href: "/teacher/reportes", label: "Reportes", icon: "📈" },
+const NAV: { href: string; label: string; icon: NavIconName }[] = [
+  { href: "/teacher/materias", label: "Materias", icon: "book" },
+  { href: "/teacher/asistencias", label: "Asistencias", icon: "check" },
+  { href: "/teacher/justificaciones", label: "Justificaciones", icon: "file" },
+  { href: "/teacher/reportes", label: "Reportes", icon: "chart" },
 ];
 
 export default function TeacherSidebar({
@@ -58,10 +59,10 @@ export default function TeacherSidebar({
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-2.5 w-full text-left px-3.5 py-2.5 rounded-xl font-extrabold text-sm"
+                className="flex items-center gap-3 w-full text-left px-3.5 py-2.5 rounded-xl font-extrabold text-sm"
                 style={active ? { background: "#f2f0fd", color: "#6d5efc" } : { color: "#6b6880" }}
               >
-                <span className="text-[17px]">{item.icon}</span> {item.label}
+                <NavIcon name={item.icon} size={22} /> {item.label}
                 {item.href === "/teacher/justificaciones" && pendingCount > 0 && (
                   <span className="ml-auto bg-[#ff5c9d] text-white text-[11px] font-extrabold rounded-full px-2 py-px">
                     {pendingCount}
@@ -80,8 +81,8 @@ export default function TeacherSidebar({
             <div className="font-bold text-[13.5px] truncate">{teacherName}</div>
             <div className="text-[11px] text-[#a5a1bd] truncate">{teacherEmail}</div>
           </div>
-          <button onClick={logout} title="Salir" className="bg-[#f4f3ff] rounded-[10px] p-2 text-[15px]">
-            ↩
+          <button onClick={logout} title="Salir" className="bg-[#f4f3ff] rounded-[10px] p-2 text-[#6b6880]">
+            <NavIcon name="logout" size={18} />
           </button>
         </div>
       </aside>
@@ -99,8 +100,8 @@ export default function TeacherSidebar({
         <div className="w-8 h-8 rounded-full bg-[#ffe1d6] text-[#ff7a59] flex items-center justify-center font-extrabold text-xs flex-none">
           {initials}
         </div>
-        <button onClick={logout} title="Salir" className="bg-[#f4f3ff] rounded-[9px] p-1.5 text-[13px] flex-none">
-          ↩
+        <button onClick={logout} title="Salir" className="bg-[#f4f3ff] rounded-[9px] p-1.5 text-[#6b6880] flex-none">
+          <NavIcon name="logout" size={17} />
         </button>
       </header>
 
@@ -117,7 +118,7 @@ export default function TeacherSidebar({
               className="flex-1 flex flex-col items-center gap-0.5 py-1.5 relative"
               style={{ color: active ? "#6d5efc" : "#a5a1bd" }}
             >
-              <span className="text-[19px]">{item.icon}</span>
+              <NavIcon name={item.icon} size={24} />
               <span className="text-[10px] font-extrabold leading-none text-center">{item.label}</span>
               {item.href === "/teacher/justificaciones" && pendingCount > 0 && (
                 <span className="absolute top-0 right-[22%] bg-[#ff5c9d] text-white text-[9px] font-extrabold rounded-full px-[5px] py-px">

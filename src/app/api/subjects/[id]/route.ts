@@ -35,6 +35,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
         ...(data.weekdays !== undefined && { weekdays: data.weekdays }),
         ...(data.active !== undefined && { active: data.active }),
         ...(data.icon !== undefined && { icon: data.icon }),
+        ...(data.joinEnabled !== undefined && { joinEnabled: data.joinEnabled }),
       },
     });
 

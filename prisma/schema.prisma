@@ -17,7 +17,21 @@ enum Role {
 
 enum AttendanceStatus {
   PRESENTE
+  RETARDO
   FALTA
+}
+
+// cómo se capturó un registro de asistencia
+enum AttendanceSource {
+  QR
+  MANUAL
+}
+
+// NUMERIC: calificación numérica sobre maxScore (100, 10, …)
+// OPTIONS: lista de opciones definida por el maestro (ej. 1 / R / 0)
+enum GradeScaleType {
+  NUMERIC
+  OPTIONS
 }
 
 enum LocationStatus {
@@ -47,6 +61,8 @@ model User {
   justifications   Justification[]  @relation("StudentJustifications")
   reviewedJustifications Justification[] @relation("ReviewerJustifications")
   claimedInvitations Invitation[]   @relation("ClaimedInvitations")
+  grades           Grade[]
+  rubricTemplates  RubricTemplate[]
 }
 
 model Subject {
@@ -63,6 +79,9 @@ model Subject {
   // así se ajusta solo si la clase cambia de salón
   radiusM     Int      @default(120)
   active      Boolean  @default(true)
+  // código corto (6 caracteres, letras y números) con el que los alumnos se unen a la materia
+  joinCode    String   @unique
+  joinEnabled Boolean  @default(true)
   createdAt   DateTime @default(now())
 
   teacherId   String
@@ -73,6 +92,8 @@ model Subject {
   qrTokens    QrToken[]
   attendanceRecords AttendanceRecord[]
   justifications Justification[]
+  assignments Assignment[]
+  gradingScales GradingScale[]
 
   @@unique([teacherId, code])
 }
@@ -125,6 +146,7 @@ model AttendanceRecord {
   scannedAt     DateTime         @default(now())
   classDate     DateTime         // day (midnight) this record counts towards
   status        AttendanceStatus @default(PRESENTE)
+  source        AttendanceSource @default(QR)
   locationStatus LocationStatus  @default(NA)
   latitude      Float?
   longitude     Float?
@@ -149,4 +171,69 @@ model Justification {
   reviewedAt   DateTime?
   reviewerId   String?
   reviewer     User?    @relation("ReviewerJustifications", fields: [reviewerId], references: [id])
+}
+
+// Escala de calificación personalizada que el maestro guarda en una materia para reutilizarla
+// al crear asignaciones (las escalas predefinidas viven en src/lib/grading.ts).
+model GradingScale {
+  id        String         @id @default(cuid())
+  subjectId String
+  subject   Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  name      String
+  type      GradeScaleType
+  maxScore  Float?         // solo NUMERIC
+  options   Json?          // solo OPTIONS: [{ code, label, value }]
+  createdAt DateTime       @default(now())
+
+  @@index([subjectId])
+}
+
+model Assignment {
+  id          String         @id @default(cuid())
+  subjectId   String
+  subject     Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  name        String
+  description String         @default("")
+  dueDate     DateTime?
+  // ponderación de la asignación en el promedio de la materia
+  weight      Float          @default(1)
+  // copia de la escala al crear la asignación, para que editar una escala no altere calificaciones
+  scaleName   String
+  scaleType   GradeScaleType
+  maxScore    Float?
+  options     Json?
+  // rúbrica: [{ id, title, description, points }]
+  rubric      Json           @default("[]")
+  createdAt   DateTime       @default(now())
+
+  grades      Grade[]
+
+  @@index([subjectId])
+}
+
+model Grade {
+  id           String     @id @default(cuid())
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  score        Float?     // escala NUMERIC
+  optionCode   String?    // escala OPTIONS
+  rubricScores Json?      // { [criterionId]: puntos }
+  comment      String     @default("")
+  gradedAt     DateTime   @default(now())
+
+  @@unique([assignmentId, studentId])
+}
+
+// Rúbrica guardada por el maestro para reutilizar en otras asignaciones
+model RubricTemplate {
+  id        String   @id @default(cuid())
+  teacherId String
+  teacher   User     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  name      String
+  criteria  Json     // [{ title, description, points }]
+  createdAt DateTime @default(now())
+
+  @@index([teacherId])
 }
