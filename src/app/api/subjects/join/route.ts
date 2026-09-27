@@ -9,11 +9,15 @@ export async function POST(req: NextRequest) {
     const user = await requireUser("STUDENT");
     const { code } = joinSubjectSchema.parse(await req.json());
 
-    const subject = await prisma.subject.findFirst({
-      where: { code: { equals: code, mode: "insensitive" } },
-    });
+    const subject = await prisma.subject.findUnique({ where: { joinCode: code } });
     if (!subject) {
-      return NextResponse.json({ error: "No existe ninguna materia con esa clave" }, { status: 404 });
+      return NextResponse.json({ error: "No existe ninguna materia con ese código" }, { status: 404 });
+    }
+    if (!subject.joinEnabled) {
+      return NextResponse.json(
+        { error: "El maestro desactivó la inscripción por código para esta materia" },
+        { status: 403 },
+      );
     }
     if (!subject.active) {
       return NextResponse.json({ error: "Esta materia está archivada" }, { status: 400 });

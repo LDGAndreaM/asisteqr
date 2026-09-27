@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     });
     if (!enrolled || !enrolled.active) {
       return NextResponse.json(
-        { error: `No estás inscrito en ${subject.name}. Únete con la clave ${subject.code} primero.` },
+        { error: `No estás inscrito en ${subject.name}. Únete con el código ${subject.joinCode} primero.` },
         { status: 403 },
       );
     }
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     const existing = await prisma.attendanceRecord.findUnique({
       where: { subjectId_studentId_classDate: { subjectId: subject.id, studentId: user.id, classDate } },
     });
-    if (existing?.status === "PRESENTE") {
+    if (existing && existing.status !== "FALTA") {
       return NextResponse.json({
         ok: true,
         alreadyRegistered: true,
@@ -67,6 +67,7 @@ export async function POST(req: NextRequest) {
         classDate,
         scannedAt: now,
         status: inside ? "PRESENTE" : "FALTA",
+        source: "QR",
         locationStatus: inside ? "DENTRO" : "FUERA",
         latitude,
         longitude,
@@ -75,6 +76,7 @@ export async function POST(req: NextRequest) {
       update: {
         scannedAt: now,
         status: inside ? "PRESENTE" : "FALTA",
+        source: "QR",
         locationStatus: inside ? "DENTRO" : "FUERA",
         latitude,
         longitude,

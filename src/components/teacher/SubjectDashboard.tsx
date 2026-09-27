@@ -5,6 +5,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import QrModal from "@/components/teacher/QrModal";
 import SubjectFormModal from "@/components/teacher/SubjectFormModal";
+import AttendanceSheet from "@/components/teacher/AttendanceSheet";
+import AssignmentsPanel from "@/components/teacher/AssignmentsPanel";
+import JoinCodeCard from "@/components/teacher/JoinCodeCard";
+
+type Tab = "alumnos" | "asistencia" | "asignaciones";
+
+const TAB_LABELS: { key: Tab; label: string }[] = [
+  { key: "alumnos", label: "👥 Alumnos" },
+  { key: "asistencia", label: "✅ Asistencia" },
+  { key: "asignaciones", label: "📝 Asignaciones" },
+];
 
 type Subject = {
   id: string;
@@ -16,6 +27,8 @@ type Subject = {
   tint: string;
   active: boolean;
   weekdays: number[];
+  joinCode: string;
+  joinEnabled: boolean;
 };
 
 type StudentRow = {
@@ -27,6 +40,7 @@ type StudentRow = {
   active: boolean;
   total: number;
   present: number;
+  late: number;
   absent: number;
   justified: number;
   rate: number;
@@ -51,13 +65,16 @@ export default function SubjectDashboard({
   students,
   pending,
   summary,
+  initialTab,
 }: {
   subject: Subject;
   students: StudentRow[];
   pending: PendingInvite[];
   summary: Summary;
+  initialTab: Tab;
 }) {
   const router = useRouter();
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [qrOpen, setQrOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
@@ -68,6 +85,12 @@ export default function SubjectDashboard({
   const [editInstId, setEditInstId] = useState("");
   const [editError, setEditError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  function selectTab(t: Tab) {
+    setTab(t);
+    // refleja la pestaña en la URL sin volver a pedir la página al servidor
+    window.history.replaceState(null, "", `?tab=${t}`);
+  }
 
   async function onInvite(e: FormEvent) {
     e.preventDefault();
@@ -186,6 +209,46 @@ export default function SubjectDashboard({
         <SummaryCard label="Total justif." value={summary.totalJustified} color="#ffb020" />
       </div>
 
+      <div className="flex gap-1.5 mb-5 bg-white rounded-2xl p-1.5 border border-[#f0eefb] w-fit max-w-full overflow-x-auto" role="tablist">
+        {TAB_LABELS.map((t) => (
+          <button
+            key={t.key}
+            role="tab"
+            aria-selected={tab === t.key}
+            onClick={() => selectTab(t.key)}
+            className="px-4 py-2 rounded-xl font-extrabold text-[13.5px] whitespace-nowrap"
+            style={tab === t.key ? { background: "#6d5efc", color: "#fff" } : { color: "#6b6880" }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "asistencia" && (
+        <div>
+          <div className="flex items-center justify-end gap-2 flex-wrap mb-3">
+            <span className="text-[12px] font-extrabold text-[#a5a1bd]">Reporte de todo el periodo:</span>
+            <a
+              href={`/api/reports/export?subjectId=${subject.id}&range=all&format=csv`}
+              className="px-3 py-1.5 rounded-lg bg-[#1a1830] text-white font-extrabold text-[12.5px]"
+            >
+              ⬇ CSV
+            </a>
+            <a
+              href={`/api/reports/export?subjectId=${subject.id}&range=all&format=xlsx`}
+              className="px-3 py-1.5 rounded-lg text-white font-extrabold text-[12.5px]"
+              style={{ background: "#1e7145" }}
+            >
+              📊 Excel
+            </a>
+          </div>
+          <AttendanceSheet key={subject.id} subjectId={subject.id} />
+        </div>
+      )}
+
+      {tab === "asignaciones" && <AssignmentsPanel subjectId={subject.id} />}
+
+      {tab === "alumnos" && (
       <div className="grid gap-6 lg:grid-cols-[1fr_320px] min-w-0">
         <div className="bg-white rounded-[20px] border border-[#f0eefb] overflow-hidden overflow-x-auto min-w-0">
           <div
@@ -250,7 +313,10 @@ export default function SubjectDashboard({
                       </div>
                     </div>
                   </div>
-                  <div className="font-bold text-[#0d9b81]">{s.present}</div>
+                  <div className="font-bold text-[#0d9b81]" title="Incluye retardos">
+                    {s.present}
+                    {s.late > 0 && <span className="text-[11px] text-[#d99000]"> ({s.late} R)</span>}
+                  </div>
                   <div className="font-bold text-[#e0384a]">{s.absent}</div>
                   <div className="font-bold text-[#e08a00]">{s.justified}</div>
                   <div className="font-bold">{s.rate}%</div>
@@ -285,6 +351,8 @@ export default function SubjectDashboard({
           )}
         </div>
 
+        <div className="flex flex-col gap-4 h-fit min-w-0">
+        <JoinCodeCard subjectId={subject.id} initialCode={subject.joinCode} initialEnabled={subject.joinEnabled} />
         <div className="bg-white rounded-[20px] border border-[#f0eefb] p-4 h-fit min-w-0">
           <div className="font-extrabold text-sm mb-3">Invitar por correo</div>
           <form onSubmit={onInvite} className="flex flex-col gap-2 mb-3">
@@ -332,7 +400,9 @@ export default function SubjectDashboard({
             </div>
           )}
         </div>
+        </div>
       </div>
+      )}
 
       {qrOpen && <QrModal subjectId={subject.id} onClose={() => setQrOpen(false)} />}
       {editOpen && (

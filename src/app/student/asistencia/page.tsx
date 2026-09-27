@@ -25,7 +25,7 @@ export default async function StudentAsistenciaPage() {
       <div className="text-[21px] font-black mb-3.5" style={{ fontFamily: "var(--font-nunito)" }}>
         Mi asistencia
       </div>
-      {cards.map(({ subject, present, absent, justified, total, rate, color }) => (
+      {cards.map(({ subject, present, late, absent, justified, total, rate, color }) => (
         <div
           key={subject.id}
           className="bg-white rounded-[18px] p-4 mb-3.5"
@@ -55,6 +55,11 @@ export default async function StudentAsistenciaPage() {
             <span className="bg-[#e8faf5] text-[#0d9b81] font-bold px-2.5 py-1 rounded-lg">
               ✓ {present} presente
             </span>
+            {late > 0 && (
+              <span className="bg-[#fff8e1] text-[#d99000] font-bold px-2.5 py-1 rounded-lg">
+                R {late} retardo{late === 1 ? "" : "s"}
+              </span>
+            )}
             <span className="bg-[#ffeef0] text-[#e0384a] font-bold px-2.5 py-1 rounded-lg">
               ✕ {absent} falta
             </span>

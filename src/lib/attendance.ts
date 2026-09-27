@@ -34,23 +34,28 @@ export type LiveRow = {
   studentId: string;
   name: string;
   institutionId: string | null;
-  status: "PRESENTE" | "FALTA" | "JUSTIFICADO";
+  status: "PRESENTE" | "RETARDO" | "FALTA" | "JUSTIFICADO";
+  /** true si hay un registro guardado (QR o manual); false = aún sin registrar. */
+  recorded: boolean;
+  source: "QR" | "MANUAL" | null;
   time: string | null;
   locationStatus: "DENTRO" | "FUERA" | "NA";
 };
 
-/** Tabla de asistencia de HOY para una materia: todos los inscritos + su estado. */
-export async function liveAttendanceForSubject(subjectId: string): Promise<LiveRow[]> {
-  const today = todayMidnight();
+/** Lista de asistencia de una fecha (hoy por defecto): todos los inscritos + su estado. */
+export async function liveAttendanceForSubject(
+  subjectId: string,
+  classDate: Date = todayMidnight(),
+): Promise<LiveRow[]> {
   const [enrollments, records, justifications] = await Promise.all([
     prisma.enrollment.findMany({
       where: { subjectId, active: true },
       include: { student: true },
       orderBy: { student: { name: "asc" } },
     }),
-    prisma.attendanceRecord.findMany({ where: { subjectId, classDate: today } }),
+    prisma.attendanceRecord.findMany({ where: { subjectId, classDate } }),
     prisma.justification.findMany({
-      where: { subjectId, status: "APROBADA", absenceDate: today },
+      where: { subjectId, status: "APROBADA", absenceDate: classDate },
     }),
   ]);
 
@@ -59,30 +64,26 @@ export async function liveAttendanceForSubject(subjectId: string): Promise<LiveR
 
   return enrollments.map(({ student }) => {
     const rec = recordByStudent.get(student.id);
-    if (rec?.status === "PRESENTE") {
+    const base = {
+      studentId: student.id,
+      name: student.name,
+      institutionId: student.institutionId,
+      recorded: !!rec,
+      source: rec?.source ?? null,
+    };
+    if (rec && rec.status !== "FALTA") {
       return {
-        studentId: student.id,
-        name: student.name,
-        institutionId: student.institutionId,
-        status: "PRESENTE" as const,
-        time: rec.scannedAt.toISOString().slice(11, 16),
+        ...base,
+        status: rec.status,
+        time: rec.source === "QR" ? rec.scannedAt.toISOString().slice(11, 16) : null,
         locationStatus: rec.locationStatus,
       };
     }
     if (justifiedStudents.has(student.id)) {
-      return {
-        studentId: student.id,
-        name: student.name,
-        institutionId: student.institutionId,
-        status: "JUSTIFICADO" as const,
-        time: null,
-        locationStatus: "NA" as const,
-      };
+      return { ...base, status: "JUSTIFICADO" as const, time: null, locationStatus: "NA" as const };
     }
     return {
-      studentId: student.id,
-      name: student.name,
-      institutionId: student.institutionId,
+      ...base,
       status: "FALTA" as const,
       time: null,
       locationStatus: rec?.locationStatus ?? "NA",
@@ -90,9 +91,10 @@ export async function liveAttendanceForSubject(subjectId: string): Promise<LiveR
   });
 }
 
-export type DayCellStatus = "PRESENTE" | "FALTA" | "JUSTIFICADO" | "SIN_CLASE";
+export type DayCellStatus = "PRESENTE" | "RETARDO" | "FALTA" | "JUSTIFICADO" | "SIN_CLASE";
 
-/** Estado de un alumno en una materia para una fecha específica (para reportes semanales). */
+/** Estado de cada alumno de una materia en cada una de las fechas dadas (reportes semanales o
+ * del periodo completo). */
 export async function weeklyMatrixForSubject(subjectId: string, weekDates: Date[]) {
   const subject = await prisma.subject.findUniqueOrThrow({ where: { id: subjectId } });
   const today = todayMidnight();
@@ -126,11 +128,15 @@ export async function weeklyMatrixForSubject(subjectId: string, weekDates: Date[
     const cells: DayCellStatus[] = weekDates.map((d) => {
       const day = d.getDay();
       const idx = day === 0 ? -1 : day - 1;
-      const hasClass = idx >= 0 && idx <= 4 && subject.weekdays.includes(idx);
+      // también cuenta como día de clase si el maestro pasó lista ese día fuera del horario
+      const hasClass =
+        (idx >= 0 && idx <= 4 && subject.weekdays.includes(idx)) ||
+        records.some((r) => isSameDay(r.classDate, d));
       if (!hasClass) return "SIN_CLASE";
       if (d > today) return "SIN_CLASE"; // aún no ocurre
       const rec = records.find((r) => r.studentId === student.id && isSameDay(r.classDate, d));
       if (rec?.status === "PRESENTE") return "PRESENTE";
+      if (rec?.status === "RETARDO") return "RETARDO";
       const justified = justifications.some(
         (j) => j.studentId === student.id && isSameDay(j.absenceDate, d),
       );
@@ -141,7 +147,9 @@ export async function weeklyMatrixForSubject(subjectId: string, weekDates: Date[
       studentId: student.id,
       name: student.name,
       cells,
-      present: cells.filter((c) => c === "PRESENTE").length,
+      // "present" incluye retardos (sí asistió); "late" los desglosa
+      present: cells.filter((c) => c === "PRESENTE" || c === "RETARDO").length,
+      late: cells.filter((c) => c === "RETARDO").length,
       absent: cells.filter((c) => c === "FALTA").length,
       justified: cells.filter((c) => c === "JUSTIFICADO").length,
     };
@@ -157,24 +165,30 @@ export async function subjectAttendanceRate(subject: Subject) {
   const expected = sessions * enrolledCount;
   if (expected === 0) return 0;
   const [present, justified] = await Promise.all([
-    prisma.attendanceRecord.count({ where: { subjectId: subject.id, status: "PRESENTE" } }),
+    prisma.attendanceRecord.count({
+      where: { subjectId: subject.id, status: { in: ["PRESENTE", "RETARDO"] } },
+    }),
     prisma.justification.count({ where: { subjectId: subject.id, status: "APROBADA" } }),
   ]);
   return Math.min(100, Math.round(((present + justified) / expected) * 100));
 }
 
-/** % de asistencia de UN alumno en una materia. */
+/** % de asistencia de UN alumno en una materia (los retardos cuentan como asistencia). */
 export async function studentSubjectStats(subject: Subject, studentId: string) {
   const sessions = sessionsSoFar(subject);
-  const [present, justified] = await Promise.all([
+  const [present, late, justified] = await Promise.all([
     prisma.attendanceRecord.count({
-      where: { subjectId: subject.id, studentId, status: "PRESENTE" },
+      where: { subjectId: subject.id, studentId, status: { in: ["PRESENTE", "RETARDO"] } },
+    }),
+    prisma.attendanceRecord.count({
+      where: { subjectId: subject.id, studentId, status: "RETARDO" },
     }),
     prisma.justification.count({
       where: { subjectId: subject.id, studentId, status: "APROBADA" },
     }),
   ]);
   const absent = Math.max(0, sessions - present - justified);
-  const rate = sessions === 0 ? 100 : Math.round(((present + justified) / sessions) * 100);
-  return { total: sessions, present, justified, absent, rate };
+  const rate = sessions === 0 ? 100 : Math.min(100, Math.round(((present + justified) / sessions) * 100));
+  // "present" incluye retardos (sí asistió); "late" los desglosa
+  return { total: sessions, present, late, justified, absent, rate };
 }

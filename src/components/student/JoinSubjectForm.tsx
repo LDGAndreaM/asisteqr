@@ -38,21 +38,25 @@ export default function JoinSubjectForm() {
         onClick={() => setOpen(true)}
         className="w-full mt-3 py-3 rounded-2xl bg-white border-[1.5px] border-dashed border-[#d9d5f0] text-[#6d5efc] font-bold text-[13.5px]"
       >
-        + Unirme a una materia con clave
+        + Unirme a una materia con código
       </button>
     );
   }
 
   return (
     <form onSubmit={onSubmit} className="mt-3 bg-white rounded-2xl p-4" style={{ boxShadow: "0 3px 12px rgba(40,30,90,.06)" }}>
-      <label className="block text-[12px] font-bold text-[#6b6880] mb-1.5">Clave de la materia</label>
+      <label className="block text-[12px] font-bold text-[#6b6880] mb-1.5">Código de la materia</label>
       <input
         value={code}
-        onChange={(e) => setCode(e.target.value)}
-        placeholder="Ej. CALC-201"
+        onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6))}
+        placeholder="Ej. K7P2QX"
         required
-        className="w-full px-3.5 py-3 rounded-xl border-[1.5px] border-[#e7e4f5] text-sm mb-2 outline-none"
+        autoCapitalize="characters"
+        autoComplete="off"
+        spellCheck={false}
+        className="w-full px-3.5 py-3 rounded-xl border-[1.5px] border-[#e7e4f5] text-lg font-black tracking-[0.3em] text-center mb-1 outline-none uppercase"
       />
+      <p className="text-[11.5px] text-[#a5a1bd] mb-2">Pídele a tu maestro el código de 6 letras y números.</p>
       {error && <p className="text-[#e0384a] text-xs font-bold mb-2">{error}</p>}
       <div className="flex gap-2">
         <button

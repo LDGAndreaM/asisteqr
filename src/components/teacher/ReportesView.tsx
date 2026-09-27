@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 
-type DayCellStatus = "PRESENTE" | "FALTA" | "JUSTIFICADO" | "SIN_CLASE";
+type DayCellStatus = "PRESENTE" | "RETARDO" | "FALTA" | "JUSTIFICADO" | "SIN_CLASE";
 
 type WeeklyRow = {
   studentId: string;
   name: string;
   cells: DayCellStatus[];
   present: number;
+  late: number;
   absent: number;
   justified: number;
 };
@@ -22,6 +23,7 @@ type WeeklyResponse = {
 
 const CELL_STYLE: Record<DayCellStatus, { label: string; bg: string; fg: string }> = {
   PRESENTE: { label: "✓", bg: "#e8faf5", fg: "#0d9b81" },
+  RETARDO: { label: "R", bg: "#fff8e1", fg: "#d99000" },
   FALTA: { label: "✕", bg: "#ffeef0", fg: "#e0384a" },
   JUSTIFICADO: { label: "◐", bg: "#fff5e6", fg: "#e08a00" },
   SIN_CLASE: { label: "·", bg: "transparent", fg: "#cfcbe6" },
@@ -77,20 +79,38 @@ export default function ReportesView({ subjects }: { subjects: { id: string; nam
             Días que asistió o faltó cada alumno. Descárgalo para Excel.
           </p>
         </div>
-        <div className="flex gap-2.5">
-          <a
-            href={`/api/reports/export?subjectId=${activeId}&weekOffset=${weekOffset}&format=csv`}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1a1830] text-white font-extrabold text-[13.5px]"
-          >
-            ⬇ CSV
-          </a>
-          <a
-            href={`/api/reports/export?subjectId=${activeId}&weekOffset=${weekOffset}&format=xlsx`}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white font-extrabold text-[13.5px]"
-            style={{ background: "#1e7145" }}
-          >
-            📊 Excel
-          </a>
+        <div className="flex flex-col gap-2 items-end">
+          <div className="flex gap-2.5 items-center">
+            <span className="text-[12px] font-extrabold text-[#a5a1bd]">Esta semana</span>
+            <a
+              href={`/api/reports/export?subjectId=${activeId}&weekOffset=${weekOffset}&format=csv`}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1a1830] text-white font-extrabold text-[13.5px]"
+            >
+              ⬇ CSV
+            </a>
+            <a
+              href={`/api/reports/export?subjectId=${activeId}&weekOffset=${weekOffset}&format=xlsx`}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white font-extrabold text-[13.5px]"
+              style={{ background: "#1e7145" }}
+            >
+              📊 Excel
+            </a>
+          </div>
+          <div className="flex gap-2.5 items-center">
+            <span className="text-[12px] font-extrabold text-[#a5a1bd]">Todo el periodo</span>
+            <a
+              href={`/api/reports/export?subjectId=${activeId}&range=all&format=csv`}
+              className="px-3 py-1.5 rounded-lg bg-[#f2f0fd] text-[#1a1830] font-extrabold text-[12.5px]"
+            >
+              ⬇ CSV
+            </a>
+            <a
+              href={`/api/reports/export?subjectId=${activeId}&range=all&format=xlsx`}
+              className="px-3 py-1.5 rounded-lg bg-[#e6f4ec] text-[#1e7145] font-extrabold text-[12.5px]"
+            >
+              📊 Excel
+            </a>
+          </div>
         </div>
       </div>
 
@@ -193,6 +213,7 @@ export default function ReportesView({ subjects }: { subjects: { id: string; nam
 
       <div className="flex gap-[18px] mt-4 text-[12.5px] text-[#6b6880] font-bold flex-wrap">
         <Legend bg="#e8faf5" fg="#0d9b81" label="Presente" symbol="✓" />
+        <Legend bg="#fff8e1" fg="#d99000" label="Retardo (cuenta como asistencia)" symbol="R" />
         <Legend bg="#ffeef0" fg="#e0384a" label="Falta" symbol="✕" />
         <Legend bg="#fff5e6" fg="#e08a00" label="Justificado" symbol="◐" />
         <Legend bg="transparent" fg="#cfcbe6" label="Sin clase ese día" symbol="·" />
